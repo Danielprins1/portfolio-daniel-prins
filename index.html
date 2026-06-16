@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DJP Design - Daniël Prins</title>
+<meta name="description" content="Portfolio van Daniël Prins - Communication & Multimedia Design student. Een interactieve macOS-desktop." />
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   DJP DESIGN - portfolio als interactieve macOS-desktop
+   --------------------------------------------------------------------------
+   1. tokens & reset        6. windows (generic chrome)
+   2. scene (full-screen)   7. specifieke window-bodies
+   3. wallpaper (groen)     8. dock
+   4. menu bar, widget      9. responsive & reduced motion
+   5. desktop icons + map
+   ========================================================================== */
+:root{
+  /* groene wallpaper-tinten (zelfde gradient-opzet als origineel, maar groen) */
+  --wall-1:#1f8f4e; --wall-2:#39c46e; --wall-3:#0c6b39;
+  --accent:#1f8f4e;            /* UI-accent = groen */
+  --ink:#16233f;
+  --win:#f6f7f9;
+  --red:#ff5f57; --yellow:#febc2e; --green:#28c840; --status-blue:#1f6bff;
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --shadow-win:0 24px 70px rgba(8,50,25,.32), 0 2px 10px rgba(8,50,25,.18);
+  --r-win:14px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+body{
+  font-family:var(--font); color:var(--ink);
+  background:var(--wall-1);
+  overflow:hidden; -webkit-font-smoothing:antialiased;
+  user-select:none;
+}
+img{ display:block; max-width:100%; }
+button{ font:inherit; border:0; background:none; cursor:pointer; color:inherit; }
+a{ color:inherit; }
+
+/* ==========================================================================
+   2. SCENE - schermvullend bureaublad
+   ========================================================================== */
+#scene{ position:relative; height:100%; }
+
+/* ==========================================================================
+   3. THE SCREEN + groene aurora-wallpaper
+   ========================================================================== */
+#mac{ position:relative; z-index:2; width:100%; height:100%; overflow:hidden; }
+.wallpaper{ position:absolute; inset:0; background:var(--wall-1); }
+.wallpaper .aurora{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.85; will-change:transform; }
+.au-1{ width:70%; height:70%; background:var(--wall-2); top:-20%; left:-15%; animation:au1 16s ease-in-out infinite alternate; }
+.au-2{ width:60%; height:80%; background:var(--wall-3); bottom:-30%; right:-15%; animation:au2 19s ease-in-out infinite alternate; }
+.au-3{ width:45%; height:45%; background:#baf5cf; top:30%; left:35%; opacity:.5; animation:au1 22s ease-in-out infinite alternate-reverse; }
+@keyframes au1{ from{ transform:translate(0,0) scale(1);} to{ transform:translate(10%,8%) scale(1.15);} }
+@keyframes au2{ from{ transform:translate(0,0) rotate(0);} to{ transform:translate(-8%,-10%) rotate(12deg);} }
+
+/* ───────── menu bar ───────── */
+.menubar{
+  position:absolute; top:0; left:0; right:0; height:34px; z-index:400;
+  display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+  background:rgba(255,255,255,.14); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  color:#fff; font-size:.8rem;
+}
+.menubar .left{ font-weight:700; display:flex; align-items:center; gap:8px; }
+.menubar .left .logo{ height:13px; width:auto; opacity:.95; }
+.menubar .right{ display:flex; align-items:center; gap:18px; }
+.menubar .right a{ text-decoration:none; color:#fff; font-weight:500; opacity:.92; }
+.menubar .right a:hover{ opacity:1; text-decoration:underline; text-underline-offset:3px; }
+.menubar .clock{ font-variant-numeric:tabular-nums; opacity:.85; }
+
+/* ───────── profiel-widget ───────── */
+.widget{
+  position:absolute; top:54px; left:22px; z-index:5; width:min(340px,72%);
+  padding:18px 20px 20px; border-radius:18px;
+  background:rgba(255,255,255,.16); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.28); color:#fff; box-shadow:0 18px 50px rgba(8,50,25,.22);
+}
+.widget .avatar{
+  width:46px; height:46px; border-radius:50%; margin-bottom:12px; object-fit:cover;
+  box-shadow:0 0 0 2px rgba(255,255,255,.5);
+}
+.widget h2{ font-size:1.05rem; font-weight:700; }
+.widget p{ margin-top:6px; font-size:.85rem; line-height:1.45; opacity:.92; }
+.widget .status{ margin-top:12px; display:flex; align-items:center; gap:8px; font-size:.8rem; font-weight:500; }
+.widget .status::before{ content:""; width:10px; height:10px; border-radius:50%; background:var(--status-blue); box-shadow:0 0 14px rgba(31,117,255,.55); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse{ 50%{ opacity:.6; } }
+
+/* ───────── desktop iconen ───────── */
+.dicon{
+  position:absolute; z-index:4; width:92px;
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  color:#fff; font-size:.76rem; font-weight:500; text-align:center;
+  cursor:pointer; border-radius:10px; padding:8px 4px;
+}
+.dicon:hover{ background:rgba(255,255,255,.12); }
+.dicon .ic{
+  width:62px; height:50px; position:relative;
+  transition:transform .25s var(--ease);
+  filter:drop-shadow(0 8px 14px rgba(8,40,20,.35));
+  display:grid; place-items:center;
+}
+.dicon:hover .ic{ transform:scale(1.08) translateY(-2px); }
+.dicon .lbl{ text-shadow:0 1px 6px rgba(8,40,20,.6); }
+/* macOS-achtige map (zoals voorbeeldfoto) */
+.folder{ width:62px; height:50px; position:relative; }
+.folder .tab{
+  position:absolute; top:0; left:5px; width:26px; height:12px; border-radius:6px 8px 0 0;
+  background:#6fc0f2;
+}
+.folder .back{
+  position:absolute; left:0; right:0; top:6px; bottom:0; border-radius:8px;
+  background:linear-gradient(180deg,#7fc6f5,#4aa3e8);
+}
+.folder .front{
+  position:absolute; left:0; right:0; bottom:0; top:13px; border-radius:8px;
+  background:linear-gradient(180deg,#b3e0fb,#7cc2f2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+/* ==========================================================================
+   6. WINDOWS - gedeelde chrome
+   ========================================================================== */
+.window{
+  position:absolute; z-index:10; min-width:240px;
+  background:var(--win); border-radius:var(--r-win); box-shadow:var(--shadow-win);
+  display:flex; flex-direction:column; overflow:hidden; will-change:transform,left,top;
+}
+.window.dark{ background:#23272f; color:#f0f2f6; }
+.titlebar{
+  position:relative;
+  height:42px; flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:0 14px; cursor:grab;
+  background:rgba(255,255,255,.65); backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(20,35,70,.08); font-size:.86rem; font-weight:600;
+}
+.window.dark .titlebar{ background:rgba(35,39,47,.9); border-color:rgba(255,255,255,.07); }
+.titlebar:active{ cursor:grabbing; }
+.lights{ display:flex; gap:7px; }
+.lights button{ width:12px; height:12px; border-radius:50%; padding:0; position:relative; transition:filter .15s; }
+.lights .l-close{ background:var(--red);} .lights .l-min{ background:var(--yellow);} .lights .l-max{ background:var(--green);}
+.lights button:hover{ filter:brightness(.85); }
+.lights button span{ position:absolute; inset:0; display:grid; place-items:center; font-size:9px; line-height:1; color:rgba(0,0,0,.55); opacity:0; font-weight:700; text-align:center; }
+.window:hover .lights button span{ opacity:1; }
+.titlebar .t-title{ position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); width:calc(100% - 140px); text-align:center; opacity:.85; pointer-events:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.titlebar .t-tools{ display:flex; gap:8px; margin-left:auto; }
+.titlebar .t-tools button{ width:26px; height:26px; border-radius:8px; display:grid; place-items:center; font-size:.85rem; color:inherit; opacity:.7; }
+.titlebar .t-tools button:hover{ background:rgba(20,35,70,.08); opacity:1; }
+.window.dark .t-tools button:hover{ background:rgba(255,255,255,.1); }
+.win-body{ flex:1; overflow:auto; }
+.window.focused{ box-shadow:0 34px 90px rgba(8,50,25,.45), 0 2px 10px rgba(8,50,25,.2); }
+
+/* ==========================================================================
+   7. SPECIFIEKE WINDOW-BODIES
+   ========================================================================== */
+/* ── Projects (Finder-lijst) ── */
+.proj-cols{
+  display:grid; grid-template-columns:1fr 150px 80px; padding:8px 18px;
+  font-size:.74rem; font-weight:600; color:#7a86a0; border-bottom:1px solid rgba(20,35,70,.08);
+  position:sticky; top:0; background:var(--win); z-index:1;
+}
+.proj-cols span:nth-child(2), .proj-cols span:nth-child(3){ text-align:center; }
+.proj-row{ display:grid; grid-template-columns:1fr 150px 80px; align-items:center; padding:8px 18px; font-size:.85rem; cursor:pointer; }
+.proj-row .dim{ text-align:center; }
+.proj-row:nth-child(odd){ background:rgba(20,35,70,.035); }
+.proj-row:hover{ background:rgba(31,143,78,.12); }
+.proj-row.active{ background:var(--accent); color:#fff; }
+.proj-row .nm{ display:flex; align-items:center; gap:10px; font-weight:500; }
+.proj-row .mini{ width:28px; height:28px; border-radius:7px; flex:0 0 auto; object-fit:cover; box-shadow:inset 0 1px 0 rgba(255,255,255,.5); background-size:cover; background-position:center; }
+.proj-row .dim{ color:#7a86a0; font-size:.78rem; }
+.proj-row.active .dim{ color:rgba(255,255,255,.85); }
+@media(max-width:680px){
+  .proj-cols, .proj-row{ grid-template-columns:1fr 70px; }
+  .proj-cols span:nth-child(2), .proj-row .dim:nth-of-type(1){ display:none; }
+}
+
+/* ── Preview window ── */
+.prev-art{ position:relative; background:#e9ecf1; display:grid; place-items:center; min-height:200px; }
+.prev-art img{ width:100%; height:auto; display:block; max-height:70vh; object-fit:contain; }
+.prev-art video{ width:100%; height:auto; display:block; max-height:70vh; background:#000; }
+.prev-nav{ display:flex; gap:4px; }
+.prev-nav button{ width:26px; height:26px; border-radius:8px; opacity:.75; }
+.prev-nav button:hover{ background:rgba(20,35,70,.08); opacity:1; }
+.prev-multi{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:10px; }
+.prev-multi .prev-art{ min-height:150px; overflow:hidden; border-radius:14px; }
+.prev-multi .prev-art img{ width:100%; height:100%; object-fit:cover; display:block; }
+.prev-figma{ padding:14px 18px; background:#fff; border-top:1px solid rgba(20,35,70,.08); font-size:.85rem; }
+.prev-figma a{ color:var(--accent); font-weight:600; text-decoration:none; }
+.prev-figma a:hover{ text-decoration:underline; }
+.ill-info{ padding:18px 18px 20px; background:#fff; border-top:1px solid rgba(20,35,70,.08); color:#4f566d; font-size:.86rem; line-height:1.6; }
+.ill-info strong{ display:block; margin-bottom:10px; color:#16233f; font-size:.95rem; }
+.hidden{display:none;}
+
+/* ── Info panel ── */
+.info-body{ padding:16px 20px 22px; font-size:.84rem; }
+.info-body dt{ color:#7a86a0; font-size:.74rem; margin-top:14px; }
+.info-body dt:first-child{ margin-top:2px; }
+.info-body dd{ font-weight:600; margin-top:2px; line-height:1.5; }
+
+/* ── Gallery grid ── */
+.gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; padding:16px; }
+.gallery-grid .cell{ border-radius:10px; overflow:hidden; cursor:pointer; position:relative; aspect-ratio:3/4; transition:transform .25s var(--ease); background:#e9ecf1; }
+.gallery-grid .cell:hover{ transform:scale(1.05); z-index:1; box-shadow:0 12px 30px rgba(8,50,25,.3); }
+.gallery-grid .cell img{ width:100%; height:100%; object-fit:cover; }
+.gallery-grid .cell em{ position:absolute; left:8px; bottom:6px; right:8px; font-style:normal; font-size:.72rem; color:#fff; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+
+/* ── About / Contact rich text ── */
+.rich{ padding:22px 26px 28px; font-size:.9rem; line-height:1.65; }
+.rich .who{ display:flex; gap:16px; align-items:center; margin-bottom:16px; }
+.rich .who img{ width:64px; height:64px; border-radius:50%; object-fit:cover; box-shadow:0 4px 14px rgba(8,50,25,.2); }
+.rich .who h3{ font-size:1.2rem; }
+.rich .who span{ color:#7a86a0; font-size:.85rem; }
+.rich p+p{ margin-top:12px; }
+.rich .stats{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+.rich .stats div{ flex:1; min-width:120px; padding:14px; border-radius:12px; background:rgba(31,143,78,.09); }
+.rich .stats b{ display:block; font-size:1.5rem; color:var(--accent); line-height:1.1; }
+.rich .stats span{ font-size:.72rem; color:#5a6678; margin-top:4px; display:block; }
+.rich .contact-list{ list-style:none; margin-top:6px; }
+.rich .contact-list li{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid rgba(20,35,70,.07); }
+.rich .contact-list li .ico{ width:34px; height:34px; border-radius:9px; background:rgba(31,143,78,.12); display:grid; place-items:center; font-size:1.05rem; flex:0 0 auto; }
+.rich .contact-list li a{ color:var(--accent); font-weight:600; text-decoration:none; word-break:break-all; }
+.rich .contact-list li a:hover{ text-decoration:underline; }
+.rich .contact-list li .sub{ font-size:.72rem; color:#7a86a0; }
+
+/* ── Skills "Get Info" venster ── */
+.skills-info{ padding:8px 0 12px; font-size:.86rem; }
+.skills-info .group{ padding:6px 20px; }
+.skills-info .group h4{ font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#7a86a0; margin:12px 0 8px; }
+.skills-info .chip{
+  display:inline-flex; align-items:center; gap:6px; margin:0 6px 6px 0; padding:7px 12px;
+  border-radius:9px; background:#fff; border:1px solid rgba(20,35,70,.1); font-weight:500; font-size:.82rem;
+  transition:transform .2s var(--ease), border-color .2s, background .2s;
+}
+.skills-info .chip:hover{ transform:translateY(-2px); border-color:var(--accent); background:rgba(31,143,78,.06); }
+.skills-info .chip .dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); }
+
+/* ── Highlights/illustraties grote viewer (hergebruikt preview) ── */
+
+/* ==========================================================================
+   8. DOCK
+   ========================================================================== */
+.dock-wrap{ position:absolute; bottom:12px; left:50%; transform:translateX(-50%); z-index:450; }
+.dock{
+  display:flex; align-items:flex-end; gap:10px; padding:9px 12px; border-radius:22px;
+  background:rgba(255,255,255,.22); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.35); box-shadow:0 16px 40px rgba(8,50,25,.3);
+}
+.dock .app{
+  width:48px; height:48px; border-radius:12px; position:relative; display:grid; place-items:center; font-size:1.5rem;
+  transform-origin:bottom center; will-change:transform;
+  box-shadow:0 6px 16px rgba(8,50,25,.25), inset 0 1px 0 rgba(255,255,255,.55);
+}
+.dock .app i{ font-style:normal; }
+.dock .app::after{ content:""; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,.9); opacity:0; transition:opacity .2s; }
+.dock .app.running::after{ opacity:1; }
+.dock .app .tip{
+  position:absolute; bottom:calc(100% + 12px); left:50%; transform:translateX(-50%);
+  background:rgba(15,40,25,.88); color:#fff; font-size:.68rem; font-weight:500; padding:4px 9px; border-radius:7px;
+  white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s;
+}
+.dock .app:hover .tip{ opacity:1; }
+#mac.hide-during-start{ opacity:0; }
+#mac.hide-during-start .menubar,
+#mac.hide-during-start .widget,
+#mac.hide-during-start .dicon,
+#mac.hide-during-start .dock-wrap{ opacity:0; visibility:hidden; }
+.launch-overlay{ position:absolute; inset:0; z-index:490; pointer-events:none; overflow:hidden; background:#f5f6f8; }
+.launch-background{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(246,247,248,1)); opacity:1; animation:fadeOut 0.9s ease 0.1s forwards; }
+.dock .app svg{ width:20px; height:20px; }
+@keyframes fadeOut{ 0%{ opacity:1; }
+  80%{ opacity:1; }
+  100%{ opacity:0; } }
+
+/* ==========================================================================
+   9. RESPONSIVE & REDUCED MOTION
+   ========================================================================== */
+@media(max-width:740px){
+  .menubar .right a:not(:first-child){ display:none; }
+  .widget{ width:min(300px,80%); }
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.001s !important; }
+  #scene{ opacity:1 !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="scene">
+  <div id="mac" class="hide-during-start">
+    <div class="wallpaper">
+      <div class="aurora au-1"></div><div class="aurora au-2"></div><div class="aurora au-3"></div>
+    </div>
+    <div class="launch-overlay" id="launchOverlay">
+      <div class="launch-background"></div>
+    </div>
+
+    <!-- menu bar -->
+    <div class="menubar">
+      <span class="left"><img class="logo" src="assets/favicon.png" alt="DJP" style="height:15px;border-radius:3px"> DJP Design</span>
+      <nav class="right">
+        <a href="#" data-open="projects">Projecten</a>
+        <a href="#" data-open="gallery">Illustraties</a>
+        <a href="#" data-open="about">Over</a>
+        <a href="#" data-open="contact">Contact</a>
+        <span class="clock" id="clock">--:--</span>
+      </nav>
+    </div>
+
+    <!-- profiel-widget -->
+    <div class="widget" id="widget">
+      <img class="avatar" src="assets/profile.png" alt="Daniël Prins" />
+      <h2>Daniël Prins - Designer</h2>
+      <p>Communication &amp; Multimedia Design student met een passie voor tech, vormgeving en mensen.</p>
+      <div class="status">Open voor freelance werk</div>
+    </div>
+
+    <!-- desktop iconen: mappen (zoals echte desktop) -->
+    <div class="dicon" style="left:9%; top:18%" data-open="gallery">
+      <span class="ic"><span class="folder"><span class="tab"></span><span class="back"></span><span class="front"></span></span></span>
+      <span class="lbl">Illustraties</span>
+    </div>
+    <div class="dicon" style="left:9%; top:48%" data-project="bungehuis">
+      <span class="ic"><span class="folder"><span class="tab"></span><span class="back"></span><span class="front"></span></span></span>
+      <span class="lbl">Bungehuis</span>
+    </div>
+    <div class="dicon" style="left:34%; top:16%" data-project="actnow">
+      <span class="ic"><span class="folder"><span class="tab"></span><span class="back"></span><span class="front"></span></span></span>
+      <span class="lbl">Act Now</span>
+    </div>
+    <div class="dicon" style="right:10%; top:20%" data-project="goldenroast-dash">
+      <span class="ic"><span class="folder"><span class="tab"></span><span class="back"></span><span class="front"></span></span></span>
+      <span class="lbl">Golden Roast</span>
+    </div>
+    <div class="dicon" style="right:10%; top:52%" data-project="olami">
+      <span class="ic"><span class="folder"><span class="tab"></span><span class="back"></span><span class="front"></span></span></span>
+      <span class="lbl">Olami</span>
+    </div>
+
+    <div id="windows"></div>
+
+    <!-- dock -->
+    <div class="dock-wrap">
+      <div class="dock" id="dock">
+        <button class="app" data-open="projects" style="background:linear-gradient(160deg,#5fd98a,#1f8f4e)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span class="tip">Projecten</span></button>
+        <button class="app" data-open="gallery"  style="background:linear-gradient(160deg,#ffd27a,#ff9f43)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l11-11 3 3-11 11H5v-3z"/><path d="M16 6l2 2"/><path d="M7 18l3-1"/></svg><span class="tip">Illustraties</span></button>
+        <button class="app" data-open="about"    style="background:linear-gradient(160deg,#ff9cd7,#ff65b2)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M6 20c0-3 3-5 6-5s6 2 6 5"/></svg><span class="tip">Over mij</span></button>
+        <button class="app" data-open="skills"   style="background:linear-gradient(160deg,#9d7bff,#6d4ae0)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18c0-2 1-3 2-3s2 1 2 2v3h2v-7c0-1 .5-2 1.5-2s1.5 1 1.5 2v7h2v-5c0-1 .5-2 1.5-2s1.5 1 1.5 2v3c0 1-1 2-2 2H5z"/></svg><span class="tip">Skills</span></button>
+        <button class="app" data-open="contact"  style="background:linear-gradient(160deg,#6db5ff,#1f6ef2)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="M4 6l8 7 8-7"/></svg><span class="tip">Contact</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+/* ==========================================================================
+   DJP DESIGN - desktop engine
+   ========================================================================== */
+(() => {
+"use strict";
+
+const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isFine = matchMedia("(hover:hover) and (pointer:fine)").matches;
+
+/* GSAP-fallback: als de CDN niet laadt, blijft alles werken (geen animaties). */
+const gsap = window.gsap || (() => {
+  const apply = (t, v) => {
+    if (!t) return;
+    const els = typeof t === "string" ? document.querySelectorAll(t) : (t.length ? t : [t]);
+    els.forEach && els.forEach((el) => {
+      if (!el || !el.style) return;
+      for (const k in v) {
+        if (["duration","ease","stagger","delay","onComplete","onUpdate","repeat","yoyo","clearProps","transformPerspective","onStart"].includes(k)) continue;
+        if (k === "scale") el.style.transform = `scale(${v[k]})`;
+        else if (k === "x" || k === "y") el.style.transform = `translate(${v.x||0}px,${v.y||0}px)`;
+        else if (k === "opacity") el.style.opacity = v[k];
+        else if (k === "rotation") el.style.transform = `rotate(${v[k]}deg)`;
+        else el.style[k] = typeof v[k]==="number" && k!=="zIndex" ? v[k]+"px" : v[k];
+      }
+    });
+    if (v && v.onComplete) v.onComplete();
+  };
+  return { to: apply, from: (t,v)=>{ if(v&&v.onComplete)v.onComplete(); }, fromTo:(t,a,b)=>apply(t,b),
+    set: apply, quickTo:()=>()=>{},
+    timeline:()=>{ const tl={ to:(...a)=>{apply(...a);return tl;}, from:(...a)=>{a[1]&&a[1].onComplete&&a[1].onComplete();return tl;}, add:(fn)=>{typeof fn==="function"&&fn();return tl;} }; return tl; } };
+})();
+
+const mac = document.getElementById("mac");
+const windowsRoot = document.getElementById("windows");
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const A = "assets/";
+
+function createLaunchTone(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const mix = ctx.createGain();
+    osc1.type = "triangle";
+    osc2.type = "sine";
+    osc1.frequency.setValueAtTime(320, ctx.currentTime);
+    osc2.frequency.setValueAtTime(480, ctx.currentTime);
+    osc1.frequency.linearRampToValueAtTime(430, ctx.currentTime + 0.25);
+    osc2.frequency.linearRampToValueAtTime(520, ctx.currentTime + 0.25);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.95);
+    osc1.connect(mix);
+    osc2.connect(mix);
+    mix.connect(gain);
+    gain.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc2.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 1.05);
+    osc2.stop(ctx.currentTime + 1.05);
+    const play = () => { if (ctx.state === "suspended") ctx.resume(); };
+    document.addEventListener("pointerdown", play, { once:true });
+    return () => { play(); };
+  } catch (err) {
+    return null;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   1. DATA - projecten en illustraties (echte content van Daniël)
+   ───────────────────────────────────────────────────────────── */
+const PROJECTS = [
+  {
+    id:"actnow", name:"Act Now Before We Can't", role:"Beeldtaal", brand:"Greenpeace", year:2026,
+    img:[A+"greenpeace.jpg"],
+    desc:"Voor deze opdracht stond beeldtaal centraal. De uitdaging was om een krachtige boodschap over klimaatverandering over te brengen zonder veel tekst. Ik koos Greenpeace als afzender en ontwikkelde een campagne met de slogan \"Act Now Before We Can't\". Door een sterk contrast tussen een leefbare en een onleefbare wereld werd de urgentie direct zichtbaar - beeld alleen roept al een emotionele reactie op en zet mensen aan het denken."
+  },
+  {
+    id:"goldenroast-dash", name:"The Golden Roast - Dashboard", role:"Kleur & Compositie", brand:"The Golden Roast", year:2026,
+    img:[A+"dashboard.jpg"],
+    desc:"Een dashboard waarbij kleur en compositie een hoofdrol spelen. De uitdaging: veel informatie overzichtelijk tonen zonder dat het druk of onduidelijk wordt. Door bewuste kleurhiërarchie, witruimte en een heldere indeling ontstond een dashboard dat zowel functioneel als visueel aantrekkelijk is."
+  },
+  {
+    id:"goldenroast-one", name:"The Golden Roast - One Pager", role:"Kleur & Compositie", brand:"The Golden Roast", year:2026,
+    img:[A+"onepager.jpg"],
+    desc:"Naast het dashboard ontwierp ik een one pager voor The Golden Roast. Alle informatie op één pagina, zonder dat het overweldigend wordt. Met een duidelijke visuele hiërarchie, sterke composities en warme merkkleuren ontstond een pagina die zowel informatief als aantrekkelijk is."
+  },
+  {
+    id:"bungehuis", name:"Bungehuis", role:"Typografie", brand:"Eigen lettertype", year:2026,
+    img:[A+"bung_entree.jpg", A+"bung_vorm.jpg", A+"bung_geschiedenis.jpg", A+"bung_gang.jpg", A+"bung_hall.jpg"],
+    figma:"https://www.figma.com/design/DX8gISIEo2bDsQO5gaFHWl/Typografie-opdracht?node-id=0-1",
+    desc:"Een visuele uiting rondom het Bungehuis in Amsterdam, waarbij typografie niet alleen informatie overbrengt maar zelf onderdeel van het ontwerp wordt. Het lettertype is afgeleid van de gevel van het gebouw: de herhaling van ramen en vlakken vormt een grid dat terugkomt in de opbouw van de letters. Spelen met hiërarchie, schaal en ritme - zonder de leesbaarheid te verliezen."
+  },
+  {
+    id:"olami", name:"Olami in Beweging", role:"Interactie & Beweging", brand:"Olami", year:2026,
+    video:A+"olami.mp4", poster:A+"olami_poster.jpg",
+    desc:"Een onderzoek naar hoe beweging kan bijdragen aan het vertellen van een verhaal. Ik ontwierp een geanimeerde wereldbol voor Olami die reageert op drie nummers: Earth Song, Plastic Soep en Laat de Zon in je Hart. De uitdaging was om sfeer, emotie en boodschap van elk lied te vertalen naar beweging, vorm en timing - drie unieke animaties met hetzelfde object, ieder met een totaal andere beleving."
+  },
+  {
+    id:"jodendom", name:"Zichtbaar Jodendom", role:"Meesterproef", brand:"Meesterproef", year:2026,
+    img:[], comingSoon:true,
+    desc:"Mijn meesterproef. De beschrijving en het beeldmateriaal volgen binnenkort - houd deze plek in de gaten."
+  },
+];
+const byId = (id) => PROJECTS.find((p) => p.id === id);
+
+const ILLUSTRATIONS = [
+  { img:A+"ill_poeriem.jpg",    t:"Tussen Toen en Nu", role:"Illustratie | 2025", desc:"Voor deze poster wilde ik de moderne relevantie van het Poeriemverhaal zichtbaar maken. De uitdaging was om een eeuwenoud verhaal te verbinden met het Amsterdam van nu. Door een tijdmachine-achtige constructie midden in een hedendaagse Amsterdamse straat te plaatsen, komen verleden en heden samen en wordt zichtbaar hoe de thema's uit het Poeriemverhaal nog steeds actueel zijn." },
+  { img:A+"ill_november.jpg",   t:"Een Zomer Vol Tradities", role:"Illustratie | 2025", desc:"Voor deze zomerkampposter stond het warme en vertrouwde gevoel van Haboniem centraal. De uitdaging was om niet alleen een zomerse sfeer neer te zetten, maar ook een echte Haboniem-traditie vast te leggen waar veel deelnemers herinneringen aan hebben. Door herkenbare elementen uit de beweging te combineren met een kleurrijke illustratiestijl ontstond een poster die direct het gevoel van zomerkamp oproept." },
+  { img:A+"ill_mei.jpg",        t:"De Vlucht Naar Verandering", role:"Illustratie | 2024", desc:"Deze poster werd gemaakt rondom het thema Aletta Jacobs en feminisme. De uitdaging was om de strijd voor gelijke rechten op een inspirerende en dynamische manier te verbeelden. Door Aletta Jacobs letterlijk door de lucht te laten vliegen richting de toekomst ontstaat een beeld dat symbool staat voor vooruitgang, vrijheid en het doorbreken van bestaande grenzen." },
+  { img:A+"ill_kayitz.jpg",     t:"Het Koninkrijk van IJs", role:"Illustratie | 2024", desc:"Voor de Wintermachanee maakte ik een illustratie geïnspireerd op een fantasiewereld met een indrukwekkende ijsstad als middelpunt. De uitdaging lag in het creëren van schaal en sfeer binnen één beeld. Door sneeuw, licht en karakterontwerp te combineren ontstond een illustratie die direct uitnodigt om het verhaal achter het kamp te ontdekken." },
+  { img:A+"ill_winter.jpg",     t:"Dansend de Zomer In", role:"Illustratie | 2025", desc:"Voor deze poster ontwierp ik een kleurrijke illustratie die volledig draait om vrolijkheid, beweging en vrijheid. De uitdaging was om een opvallende illustratiestijl neer te zetten die direct de aandacht trekt. Door te werken met felle kleuren, speelse vormen en een dynamische compositie kreeg de poster een eigen karakter dat perfect aansluit bij de energie van het weekend." },
+  { img:A+"ill_amsterdam2.jpg",  t:"Amsterdam in Kleur", role:"Illustratie | 2025", desc:"In deze illustratie heb ik de Amsterdamse grachten vertaald naar een kleurrijke, vereenvoudigde stijl. De uitdaging was om een druk stadsbeeld overzichtelijk te houden zonder de herkenbaarheid te verliezen. Door te focussen op kleur, licht en compositie ontstond een illustratie die de sfeer van Amsterdam op een toegankelijke manier vastlegt." },
+  { img:A+"ill_jeruzalem.jpg",   t:"Jeruzalem", role:"Illustratie | 2025", desc:"Voor deze illustratie bracht ik een gestileerde versie van Jeruzalem in beeld, met de Oude Stad als centraal uitgangspunt. De uitdaging was om veel herkenbare elementen terug te brengen tot een rustige en minimalistische compositie. Het eindresultaat legt de focus op sfeer, kleur en vorm, waardoor de stad direct herkenbaar blijft." },
+  { img:A+"ill_tlv.jpg",        t:"Tel Aviv aan Zee", role:"Illustratie | 2025", desc:"Voor deze illustratie stond de kustlijn van Tel Aviv centraal. De uitdaging was om het contrast tussen de historische architectuur van Jaffa en de moderne skyline van Tel Aviv in één beeld samen te brengen. Door warme kleuren en een ontspannen sfeer te gebruiken ontstond een illustratie die het karakter van de stad goed weerspiegelt." },
+];
+
+const SKILLS = {
+  "Design": ["UX/UI Design","Branding & Visual Identity","Graphic Design","Illustratie","Design Systems"],
+  "Proces": ["User Research","Wireframing & Prototyping","Van Onderzoek naar Eindproduct","Pixel Perfect Details","Altijd op zoek naar een betere oplossing"],
+  "Tools": ["Figma","Adobe Illustrator","Adobe Photoshop","Adobe InDesign","Procreate"],
+  "Tech": ["HTML, CSS & JavaScript","AI Prompt Design"],
+};
+
+/* ─────────────────────────────────────────────────────────────
+   2. WINDOW MANAGER
+   ───────────────────────────────────────────────────────────── */
+let zTop = 20;
+const open = new Map();
+
+function createWindow({ key, title, html, x, y, w, dark=false, tools="" }) {
+  if (open.has(key)) { focusWin(open.get(key)); return open.get(key); }
+  const el = document.createElement("section");
+  el.className = "window" + (dark ? " dark" : "");
+  el.style.width = typeof w === "number" ? w + "px" : w;
+  el.innerHTML = `
+    <div class="titlebar">
+      <div class="lights">
+        <button class="l-close" aria-label="Sluiten"><span>✕</span></button>
+        <button class="l-min" aria-label="Minimaliseren"><span>−</span></button>
+        <button class="l-max" aria-label="Zoom"><span>+</span></button>
+      </div>
+      <span class="t-title">${title}</span>
+      <div class="t-tools">${tools}</div>
+    </div>
+    <div class="win-body">${html}</div>`;
+  windowsRoot.appendChild(el);
+
+  const mw = mac.clientWidth, mh = mac.clientHeight;
+  el.style.left = clamp(x, 8, Math.max(8, mw - el.offsetWidth - 8)) + "px";
+  el.style.top  = clamp(y, 40, mh - 80) + "px";
+  focusWin(el); open.set(key, el);
+  if (!prefersReduced) gsap.from(el, { scale:.85, opacity:0, y:18, duration:.45, ease:"back.out(1.6)" });
+
+  el.querySelector(".l-close").addEventListener("click", () => closeWin(key));
+  el.querySelector(".l-min").addEventListener("click", () => {
+    gsap.to(el, { scale:.1, y:mh, opacity:0, duration:.45, ease:"power3.in", onComplete:()=>closeWin(key,true) });
+  });
+  let maxed=null;
+  el.querySelector(".l-max").addEventListener("click", () => {
+    if(!maxed){ maxed={l:el.style.left,t:el.style.top,w:el.style.width,h:el.style.height};
+      gsap.to(el,{left:10,top:40,width:mac.clientWidth-20,height:mac.clientHeight-110,duration:.4,ease:"power3.inOut"});
+    } else { gsap.to(el,{left:maxed.l,top:maxed.t,width:maxed.w,height:maxed.h||"auto",duration:.4,ease:"power3.inOut",
+      onComplete:()=>{el.style.height=maxed.h||""; maxed=null;}}); }
+  });
+
+  const bar = el.querySelector(".titlebar");
+  bar.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    focusWin(el);
+    const sx=e.clientX, sy=e.clientY, ol=parseFloat(el.style.left), ot=parseFloat(el.style.top);
+    bar.setPointerCapture(e.pointerId);
+    const move=(ev)=>{ el.style.left=clamp(ol+ev.clientX-sx,-el.offsetWidth*.5,mac.clientWidth-60)+"px";
+                       el.style.top =clamp(ot+ev.clientY-sy,34,mac.clientHeight-60)+"px"; };
+    const up=()=>{ bar.removeEventListener("pointermove",move); bar.removeEventListener("pointerup",up); };
+    bar.addEventListener("pointermove",move); bar.addEventListener("pointerup",up);
+  });
+  el.addEventListener("pointerdown", () => focusWin(el));
+  return el;
+}
+function focusWin(el){ document.querySelectorAll(".window").forEach(w=>w.classList.remove("focused")); el.classList.add("focused"); el.style.zIndex=++zTop; }
+function closeWin(key,skip=false){ const el=open.get(key); if(!el)return; open.delete(key); markRunning();
+  if(skip||prefersReduced){el.remove();return;} gsap.to(el,{scale:.85,opacity:0,duration:.25,ease:"power2.in",onComplete:()=>el.remove()}); }
+function markRunning(){ document.querySelectorAll(".dock .app").forEach(a=>{
+  a.classList.toggle("running", open.has(a.dataset.open) || (a.dataset.open==="projects" && (open.has("preview")||open.has("info"))) || (a.dataset.open==="gallery" && open.has("ill-view"))); }); }
+
+/* ─────────────────────────────────────────────────────────────
+   3. APPS
+   ───────────────────────────────────────────────────────────── */
+let currentIdx = 0;
+
+function openProjects(){
+  const rows = PROJECTS.map(p=>`
+    <div class="proj-row" data-id="${p.id}">
+      <span class="nm"><span class="mini" style="${p.img&&p.img[0]?`background-image:url('${p.img[0]}')`:p.poster?`background-image:url('${p.poster}')`:'background:linear-gradient(140deg,#5fd98a,#1f8f4e)'}"></span>${p.name}</span>
+      <span class="dim">${p.role}</span><span class="dim">${p.year}</span>
+    </div>`).join("");
+  const el = createWindow({ key:"projects", title:"Projecten", w:Math.min(620,mac.clientWidth*.66),
+    x:mac.clientWidth*.14, y:64,
+    tools:`<button title="Lijst">☰</button>`,
+    html:`<div class="proj-cols"><span>Naam</span><span>Rol</span><span>Jaar</span></div>${rows}` });
+  el.querySelectorAll(".proj-row").forEach(r=>r.addEventListener("click",()=>{
+    openPreview(PROJECTS.findIndex(p=>p.id===r.dataset.id)); highlightRow(r.dataset.id); }));
+  highlightRow(PROJECTS[currentIdx].id); markRunning();
+}
+function highlightRow(id){ const w=open.get("projects"); if(!w)return;
+  w.querySelectorAll(".proj-row").forEach(r=>r.classList.toggle("active", r.dataset.id===id)); }
+
+function previewInner(p){
+  if (p.comingSoon)
+    return `<div class="prev-art" style="min-height:280px;flex-direction:column;gap:10px;color:#7a86a0;font-weight:600">
+      <div style="font-size:2.4rem">🚧</div><div>Binnenkort beschikbaar</div></div>`;
+  if (p.video)
+    return `<div class="prev-art"><video src="${p.video}" poster="${p.poster||''}" controls playsinline preload="metadata"></video></div>`;
+  if (p.img && p.img.length>1)
+    return `<div class="prev-multi">${p.img.slice(0,4).map(s=>`<div class="prev-art"><img src="${s}" loading="lazy" alt="${p.name}"></div>`).join("")}
+      ${p.figma?`<div class="prev-figma">🔗 Bekijk het volledige project in <a href="${p.figma}" target="_blank" rel="noopener">Figma →</a></div>`:""}</div>`;
+  return `<div class="prev-art"><img src="${p.img[0]}" loading="lazy" alt="${p.name}"></div>
+    ${p.figma?`<div class="prev-figma">🔗 Bekijk in <a href="${p.figma}" target="_blank" rel="noopener">Figma →</a></div>`:""}`;
+}
+
+function openPreview(idx=currentIdx){
+  currentIdx = (idx + PROJECTS.length) % PROJECTS.length;
+  const p = PROJECTS[currentIdx];
+  const exists = open.get("preview");
+  const html = previewInner(p);
+  if (exists){
+    exists.querySelector(".t-title").textContent = p.name;
+    const body=exists.querySelector(".win-body"); body.innerHTML=html; body.scrollTop=0;
+    const video = body.querySelector("video");
+    if(video){ video.muted = false; video.volume = 1; }
+    if(!prefersReduced) gsap.from(body.firstElementChild,{opacity:0,scale:1.02,duration:.4,ease:"power2.out"});
+    focusWin(exists);
+  } else {
+    const el = createWindow({ key:"preview", title:p.name, w:Math.min(520,mac.clientWidth*.56),
+      x:mac.clientWidth*.30, y:96,
+      tools:`<button data-info title="Info">ⓘ</button>`, html });
+    const nav=document.createElement("div"); nav.className="prev-nav";
+    nav.innerHTML=`<button data-prev>‹</button><button data-next>›</button>`;
+    el.querySelector(".lights").after(nav);
+    nav.querySelector("[data-prev]").addEventListener("click",()=>{openPreview(currentIdx-1);syncInfo();highlightRow(PROJECTS[currentIdx].id);});
+    nav.querySelector("[data-next]").addEventListener("click",()=>{openPreview(currentIdx+1);syncInfo();highlightRow(PROJECTS[currentIdx].id);});
+    el.querySelector("[data-info]").addEventListener("click",()=>open.has("info")?closeWin("info"):openInfo());
+  }
+  syncInfo(); markRunning();
+}
+
+function openInfo(){ const p=PROJECTS[currentIdx];
+  createWindow({ key:"info", title:"Info", w:300, x:mac.clientWidth*.6, y:150, html:infoHtml(p) }); markRunning(); }
+const infoHtml = (p)=>`
+  <dl class="info-body">
+    <dt>Jaar</dt><dd>${p.year}</dd>
+    <dt>Rol</dt><dd>${p.role}</dd>
+    <dt>Project</dt><dd>${p.brand}</dd>
+    <dt>Omschrijving</dt><dd style="font-weight:500">${p.desc}</dd>
+  </dl>`;
+function syncInfo(){ const w=open.get("info"); if(!w)return; w.querySelector(".win-body").innerHTML=infoHtml(PROJECTS[currentIdx]); }
+const illInfoHtml = (il)=>`
+  <dl class="info-body">
+    <dt>Illustratie</dt><dd>${il.t}</dd>
+    <dt>Type</dt><dd>${il.role}</dd>
+    <dt>Omschrijving</dt><dd style="font-weight:500">${il.desc}</dd>
+  </dl>`;
+function syncIllInfo(){ const w=open.get("ill-info"); if(!w)return; w.querySelector(".win-body").innerHTML=illInfoHtml(ILLUSTRATIONS[illIdx]); }
+function openIllInfo(){ const il=ILLUSTRATIONS[illIdx]; if(open.has("ill-info")){ closeWin("ill-info"); return; } createWindow({ key:"ill-info", title:"Info", w:300, x:mac.clientWidth*.64, y:120, html:illInfoHtml(il) }); markRunning(); }
+
+/* Illustraties-galerij */
+function openGallery(){
+  const cells = ILLUSTRATIONS.map((il,i)=>`<div class="cell" data-i="${i}"><img src="${il.img}" loading="lazy" alt="${il.t}"><em>${il.t}</em></div>`).join("");
+  const el = createWindow({ key:"gallery", title:"Illustraties", w:Math.min(680,mac.clientWidth*.74),
+    x:mac.clientWidth*.12, y:80, html:`<div class="gallery-grid">${cells}</div>` });
+  el.querySelectorAll(".cell").forEach(c=>c.addEventListener("click",()=>openIllView(+c.dataset.i)));
+  markRunning();
+}
+let illIdx=0;
+function openIllView(i=0){
+  illIdx=(i+ILLUSTRATIONS.length)%ILLUSTRATIONS.length;
+  const il=ILLUSTRATIONS[illIdx];
+  const exists=open.get("ill-view");
+  const html=`<div class="prev-art"><img src="${il.img}" loading="lazy" alt="${il.t}"></div>`;
+  if(exists){
+    exists.querySelector(".t-title").textContent=il.t;
+    const b=exists.querySelector(".win-body"); b.innerHTML=html;
+    if(!exists.querySelector("[data-info]")){
+      const infoButton=document.createElement("button");
+      infoButton.setAttribute("data-info","");
+      infoButton.title="Info";
+      infoButton.textContent="ⓘ";
+      exists.querySelector(".t-tools").appendChild(infoButton);
+      infoButton.addEventListener("click",()=>openIllInfo());
+    }
+    if(!prefersReduced) gsap.from(b.firstElementChild,{opacity:0,scale:1.02,duration:.4});
+    focusWin(exists);
+  } else {
+    const el=createWindow({ key:"ill-view", title:il.t, w:Math.min(440,mac.clientWidth*.5), x:mac.clientWidth*.36, y:90, tools:`<button data-info title="Info">ⓘ</button>`, html });
+    const nav=document.createElement("div"); nav.className="prev-nav";
+    nav.innerHTML=`<button data-prev>‹</button><button data-next>›</button>`;
+    el.querySelector(".lights").after(nav);
+    nav.querySelector("[data-prev]").addEventListener("click",()=>openIllView(illIdx-1));
+    nav.querySelector("[data-next]").addEventListener("click",()=>openIllView(illIdx+1));
+    el.querySelector("[data-info]").addEventListener("click",()=>openIllInfo());
+  }
+  syncIllInfo();
+  markRunning();
+}
+
+function openAbout(){
+  createWindow({ key:"about", title:"Over mij - Notities", w:Math.min(460,mac.clientWidth*.62), x:mac.clientWidth*.28, y:90,
+    html:`<div class="rich">
+      <div class="who"><img src="${A}profile.png" alt="Daniël Prins"><div><h3>Hoi, ik ben Daniël 👋</h3><span>22 jaar · Amsterdam</span></div></div>
+      <p>Ik zit op dit moment op de Hogeschool van Amsterdam en studeer Communication and Multimedia Design. Deze studie houdt me voornamelijk bezig met het vormgeven en programmeren van websites, apps en videogames.</p>
+      <p>Ik ben enthousiast en leergierig. Ook vind ik het ontzettend leuk om met en voor mensen van verschillende culturen te werken. Ik ben servicegericht en tech is mijn passie - en die passie wil ik graag overbrengen aan de klant.</p>
+      <div class="stats">
+        <div><b>3e jaar</b><span>Communication &amp; Multimedia Design</span></div>
+        <div><b>150+ uur</b><span>in Figma per maand</span></div>
+        <div><b>1</b><span>Command+Z verslaving</span></div>
+      </div>
+    </div>` });
+  markRunning();
+}
+
+function openSkills(){
+  const groups = Object.entries(SKILLS).map(([title,items])=>`
+    <div class="group"><h4>${title}</h4>
+      ${items.map(s=>`<span class="chip"><span class="dot"></span>${s}</span>`).join("")}
+    </div>`).join("");
+  createWindow({ key:"skills", title:"Eigenschappen - Info", w:Math.min(420,mac.clientWidth*.56), x:mac.clientWidth*.34, y:110,
+    html:`<div class="skills-info">${groups}</div>` });
+  markRunning();
+}
+
+function openContact(){
+  createWindow({ key:"contact", title:"Contact", w:Math.min(420,mac.clientWidth*.56), x:mac.clientWidth*.38, y:130,
+    html:`<div class="rich">
+      <h3 style="margin-bottom:4px">Laten we samenwerken</h3>
+      <p style="color:#7a86a0;font-size:.85rem;margin-top:0">Open voor freelance werk - stuur gerust een bericht.</p>
+      <ul class="contact-list">
+        <li><span class="ico">✉️</span><div><a href="mailto:danielprins@icloud.com">danielprins@icloud.com</a><div class="sub">E-mail</div></div></li>
+        <li><span class="ico">📱</span><div><a href="tel:+31618888310">+31 6 18 88 83 10</a><div class="sub">Mobiel</div></div></li>
+        <li><span class="ico">in</span><div><a href="https://www.linkedin.com/in/dani%C3%ABl-prins-49a5671b0/" target="_blank" rel="noopener">linkedin.com/in/daniël-prins</a><div class="sub">LinkedIn</div></div></li>
+      </ul>
+    </div>` });
+  markRunning();
+}
+
+const APPS = { projects:openProjects, gallery:openGallery, about:openAbout, skills:openSkills, contact:openContact };
+
+document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",(e)=>{ e.preventDefault(); APPS[b.dataset.open]?.(); bounce(b); }));
+document.querySelectorAll(".dicon[data-project]").forEach(ic=>ic.addEventListener("click",()=>{ openProjects(); openPreview(PROJECTS.findIndex(p=>p.id===ic.dataset.project)); }));
+
+/* ─────────────────────────────────────────────────────────────
+   4. DOCK - magnification + bounce
+   ───────────────────────────────────────────────────────────── */
+const dock=document.getElementById("dock");
+const apps=[...dock.querySelectorAll(".app")];
+if(isFine && !prefersReduced){
+  dock.addEventListener("mousemove",(e)=>{ apps.forEach(a=>{ const r=a.getBoundingClientRect();
+    const d=Math.abs(e.clientX-(r.left+r.width/2)); const s=clamp(1.5-d/130,1,1.5);
+    a.style.transform=`scale(${s}) translateY(${-(s-1)*10}px)`; }); });
+  dock.addEventListener("mouseleave",()=>apps.forEach(a=>a.style.transform="scale(1)"));
+}
+function bounce(el){ if(!el.classList.contains("app")||prefersReduced)return;
+  gsap.fromTo(el,{y:0},{y:-16,duration:.18,yoyo:true,repeat:3,ease:"power1.inOut",clearProps:"y"}); }
+
+/* ─────────────────────────────────────────────────────────────
+   5. STARTUP
+   ───────────────────────────────────────────────────────────── */
+const launchSound = createLaunchTone();
+function start(){
+  if(prefersReduced){ mac.classList.remove("hide-during-start"); document.getElementById("launchOverlay")?.remove(); return; }
+  const overlay = document.getElementById("launchOverlay");
+  const tl = gsap.timeline({ onComplete:()=>{
+    if (overlay){ gsap.to(overlay,{opacity:0,duration:.35,ease:"power2.out",onComplete:()=>overlay.remove()}); }
+  }});
+  tl.add(()=>{ mac.classList.remove("hide-during-start"); launchSound && launchSound(); })
+    .from("#mac",{opacity:0,duration:.85,ease:"power2.out"});
+}
+
+/* clock */
+const clock=document.getElementById("clock");
+const tick=()=>clock.textContent=new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});
+tick(); setInterval(tick,10000);
+
+addEventListener("resize",()=>{ open.forEach(el=>{
+  el.style.left=clamp(parseFloat(el.style.left),0,mac.clientWidth-80)+"px";
+  el.style.top =clamp(parseFloat(el.style.top),34,mac.clientHeight-60)+"px"; }); });
+
+start();
+})();
+</script>
+</body>
+</html>
