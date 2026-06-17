@@ -77,6 +77,26 @@ a{ color:inherit; }
 .widget .status{ margin-top:12px; display:flex; align-items:center; gap:8px; font-size:.8rem; font-weight:500; }
 .widget .status::before{ content:""; width:10px; height:10px; border-radius:50%; background:var(--status-blue); box-shadow:0 0 14px rgba(31,117,255,.55); animation:pulse 2s ease-in-out infinite; }
 @keyframes pulse{ 50%{ opacity:.6; } }
+/* sluitknop op de widget */
+.widget-close{
+  position:absolute; top:12px; right:12px; width:22px; height:22px; border-radius:50%;
+  display:grid; place-items:center; font-size:.7rem; color:#fff;
+  background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3);
+  opacity:0; transition:opacity .2s, background .2s; cursor:pointer;
+}
+.widget:hover .widget-close{ opacity:1; }
+.widget-close:hover{ background:rgba(255,255,255,.35); }
+/* profiel-bubble (verborgen tot widget gesloten is) */
+.profile-bubble{
+  position:absolute; top:46px; left:22px; z-index:5;
+  width:50px; height:50px; border-radius:50%; padding:0; overflow:hidden;
+  border:2px solid rgba(255,255,255,.6); box-shadow:0 10px 26px rgba(8,50,25,.3);
+  display:none; cursor:pointer; transition:transform .25s var(--ease);
+}
+.profile-bubble img{ width:100%; height:100%; object-fit:cover; }
+.profile-bubble:hover{ transform:scale(1.08); }
+body.widget-collapsed .widget{ display:none; }
+body.widget-collapsed .profile-bubble{ display:block; }
 
 .dicon{
   position:absolute; z-index:4; width:92px;
@@ -107,9 +127,19 @@ a{ color:inherit; }
   background:linear-gradient(180deg,#b3e0fb,#7cc2f2);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
 }
+/* document-icoon (voor Credits) */
+.doc{ width:42px; height:52px; position:relative; margin:0 auto;
+  background:#fdfdfd; border-radius:5px 5px 6px 6px;
+  box-shadow:0 6px 14px rgba(8,40,20,.3), inset 0 0 0 1px rgba(20,35,70,.06);
+}
+.doc .corner{ position:absolute; top:0; right:0; width:13px; height:13px;
+  background:linear-gradient(135deg,#e3e8ef 50%, #fdfdfd 50%); border-top-right-radius:5px; }
+.doc .ln{ position:absolute; left:7px; right:7px; height:3px; border-radius:2px; background:#c7cfdb; }
+.doc .ln:nth-of-type(1){ top:20px; } .doc .ln:nth-of-type(2){ top:28px; } .doc .ln.short{ top:36px; right:18px; }
 
 .window{
   position:absolute; z-index:10; min-width:240px;
+  max-height:calc(100% - 130px);
   background:var(--win); border-radius:var(--r-win); box-shadow:var(--shadow-win);
   display:flex; flex-direction:column; overflow:hidden; will-change:transform,left,top;
 }
@@ -262,6 +292,7 @@ a{ color:inherit; }
         <a href="#" data-open="projects">Projecten</a>
         <a href="#" data-open="gallery">Illustraties</a>
         <a href="#" data-open="about">Over</a>
+        <a href="#" data-open="visie">Visie</a>
         <a href="#" data-open="contact">Contact</a>
         <span class="clock" id="clock">--:--</span>
       </nav>
@@ -269,11 +300,16 @@ a{ color:inherit; }
 
     <!-- profiel-widget -->
     <div class="widget" id="widget">
+      <button class="widget-close" id="widgetClose" aria-label="Sluiten">✕</button>
       <img class="avatar" src="assets/profile.png" alt="Daniël Prins" />
       <h2>Daniël Prins - Designer</h2>
       <p>Communication &amp; Multimedia Design student met een passie voor tech, vormgeving en mensen.</p>
       <div class="status">Open voor freelance werk</div>
     </div>
+    <!-- profiel-bubble: opent de widget weer (standaard verborgen) -->
+    <button class="profile-bubble" id="profileBubble" aria-label="Profiel tonen">
+      <img src="assets/profile.png" alt="Daniël Prins" />
+    </button>
 
     <!-- desktop iconen: mappen (zoals echte desktop) -->
     <div class="dicon intro-hidden" style="left:9%; top:18%" data-open="gallery">
@@ -296,6 +332,10 @@ a{ color:inherit; }
       <span class="ic"><span class="folder"><span class="tab"></span><span class="back"></span><span class="front"></span></span></span>
       <span class="lbl">Olami</span>
     </div>
+    <div class="dicon intro-hidden" style="left:9%; top:75%" data-open="credits">
+      <span class="ic"><span class="doc"><span class="corner"></span><span class="ln"></span><span class="ln"></span><span class="ln short"></span></span></span>
+      <span class="lbl">Credits</span>
+    </div>
 
     <div id="windows"></div>
 
@@ -305,7 +345,8 @@ a{ color:inherit; }
         <button class="app" data-open="projects" style="background:linear-gradient(160deg,#5fd98a,#1f8f4e)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span class="tip">Projecten</span></button>
         <button class="app" data-open="gallery"  style="background:linear-gradient(160deg,#ffd27a,#ff9f43)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.4a2 2 0 0 1 2.83 0l1.27 1.27a2 2 0 0 1 0 2.83L8.9 19.2a2 2 0 0 1-.9.52l-3.7 1a.5.5 0 0 1-.62-.61l1-3.7a2 2 0 0 1 .52-.9z"/><path d="M14.7 5.2l4.1 4.1"/><path d="M5.6 18.3l-1.1 1.1"/></svg><span class="tip">Illustraties</span></button>
         <button class="app" data-open="about"    style="background:linear-gradient(160deg,#ff9cd7,#ff65b2)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M6 20c0-3 3-5 6-5s6 2 6 5"/></svg><span class="tip">Over mij</span></button>
-        <button class="app" data-open="skills"   style="background:linear-gradient(160deg,#9d7bff,#6d4ae0)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.4 1.4 0 0 1 2.8 0V10"/><path d="M11.8 10V2.7a1.4 1.4 0 0 1 2.8 0V10"/><path d="M14.6 10.3V5.2a1.4 1.4 0 0 1 2.8 0V13"/><path d="M6.2 11.5V8.8a1.4 1.4 0 0 1 2.8 0V12"/><path d="M17.4 9.5c.5-1 2-1 2.4.2.3.9.1 2.4-.5 4.2-.7 2.2-1.8 3.9-3.4 5.2A6.9 6.9 0 0 1 11.5 21c-2.6 0-4.4-1-5.6-2.8-.7-1-1.3-2.4-1.7-4.2L3.6 12c-.3-1.2.9-2 1.8-1.4"/></svg><span class="tip">Skills</span></button>
+        <button class="app" data-open="visie"     style="background:linear-gradient(160deg,#ffe08a,#ffb52e)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.2 1 2.5h6c0-1.3.4-1.9 1-2.5A6 6 0 0 0 12 3z"/></svg><span class="tip">Visie</span></button>
+        <button class="app" data-open="skills"   style="background:linear-gradient(160deg,#9d7bff,#6d4ae0)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.4 1.4 0 0 1 2.8 0V10"/><path d="M11.8 10V3.7a1.4 1.4 0 0 1 2.8 0V10"/><path d="M14.6 10.3V5.2a1.4 1.4 0 0 1 2.8 0V13"/><path d="M6.2 11.5V8.8a1.4 1.4 0 0 1 2.8 0V12"/><path d="M17.4 9.5c.5-1 2-1 2.4.2.3.9.1 2.4-.5 4.2-.7 2.2-1.8 3.9-3.4 5.2A6.9 6.9 0 0 1 11.5 21c-2.6 0-4.4-1-5.6-2.8-.7-1-1.3-2.4-1.7-4.2L3.6 12c-.3-1.2.9-2 1.8-1.4"/></svg><span class="tip">Skills</span></button>
         <button class="app" data-open="contact"  style="background:linear-gradient(160deg,#6db5ff,#1f6ef2)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="M4 6l8 7 8-7"/></svg><span class="tip">Contact</span></button>
       </div>
     </div>
@@ -393,8 +434,8 @@ const ILLUSTRATIONS = [
   { img:A+"ill_poeriem.jpg",    t:"Tussen Toen en Nu", role:"Illustratie | 2025", desc:"Voor deze poster wilde ik de moderne relevantie van het Poeriemverhaal zichtbaar maken. De uitdaging was om een eeuwenoud verhaal te verbinden met het Amsterdam van nu. Door een tijdmachine-achtige constructie midden in een hedendaagse Amsterdamse straat te plaatsen, komen verleden en heden samen en wordt zichtbaar hoe de thema's uit het Poeriemverhaal nog steeds actueel zijn." },
   { img:A+"ill_november.jpg",   t:"Een Zomer Vol Tradities", role:"Illustratie | 2025", desc:"Voor deze zomerkampposter stond het warme en vertrouwde gevoel van Haboniem centraal. De uitdaging was om niet alleen een zomerse sfeer neer te zetten, maar ook een echte Haboniem-traditie vast te leggen waar veel deelnemers herinneringen aan hebben. Door herkenbare elementen uit de beweging te combineren met een kleurrijke illustratiestijl ontstond een poster die direct het gevoel van zomerkamp oproept." },
   { img:A+"ill_mei.jpg",        t:"De Vlucht Naar Verandering", role:"Illustratie | 2024", desc:"Deze poster werd gemaakt rondom het thema Aletta Jacobs en feminisme. De uitdaging was om de strijd voor gelijke rechten op een inspirerende en dynamische manier te verbeelden. Door Aletta Jacobs letterlijk door de lucht te laten vliegen richting de toekomst ontstaat een beeld dat symbool staat voor vooruitgang, vrijheid en het doorbreken van bestaande grenzen." },
-  { img:A+"ill_winter.jpg",     t:"Het Koninkrijk van IJs", role:"Illustratie | 2024", desc:"Voor de Wintermachanee maakte ik een illustratie geïnspireerd op een fantasiewereld met een indrukwekkende ijsstad als middelpunt. De uitdaging lag in het creëren van schaal en sfeer binnen één beeld. Door sneeuw, licht en karakterontwerp te combineren ontstond een illustratie die direct uitnodigt om het verhaal achter het kamp te ontdekken." },
-  { img:A+"ill_kayitz.jpg",     t:"Dansend de Zomer In", role:"Illustratie | 2025", desc:"Voor deze poster ontwierp ik een kleurrijke illustratie die volledig draait om vrolijkheid, beweging en vrijheid. De uitdaging was om een opvallende illustratiestijl neer te zetten die direct de aandacht trekt. Door te werken met felle kleuren, speelse vormen en een dynamische compositie kreeg de poster een eigen karakter dat perfect aansluit bij de energie van het weekend." },
+  { img:A+"ill_kayitz.jpg",     t:"Het Koninkrijk van IJs", role:"Illustratie | 2024", desc:"Voor de Wintermachanee maakte ik een illustratie geïnspireerd op een fantasiewereld met een indrukwekkende ijsstad als middelpunt. De uitdaging lag in het creëren van schaal en sfeer binnen één beeld. Door sneeuw, licht en karakterontwerp te combineren ontstond een illustratie die direct uitnodigt om het verhaal achter het kamp te ontdekken." },
+  { img:A+"ill_winter.jpg",     t:"Dansend de Zomer In", role:"Illustratie | 2025", desc:"Voor deze poster ontwierp ik een kleurrijke illustratie die volledig draait om vrolijkheid, beweging en vrijheid. De uitdaging was om een opvallende illustratiestijl neer te zetten die direct de aandacht trekt. Door te werken met felle kleuren, speelse vormen en een dynamische compositie kreeg de poster een eigen karakter dat perfect aansluit bij de energie van het weekend." },
   { img:A+"ill_amsterdam2.jpg",  t:"Amsterdam in Kleur", role:"Illustratie | 2025", desc:"In deze illustratie heb ik de Amsterdamse grachten vertaald naar een kleurrijke, vereenvoudigde stijl. De uitdaging was om een druk stadsbeeld overzichtelijk te houden zonder de herkenbaarheid te verliezen. Door te focussen op kleur, licht en compositie ontstond een illustratie die de sfeer van Amsterdam op een toegankelijke manier vastlegt." },
   { img:A+"ill_jeruzalem.jpg",   t:"Jeruzalem", role:"Illustratie | 2025", desc:"Voor deze illustratie bracht ik een gestileerde versie van Jeruzalem in beeld, met de Oude Stad als centraal uitgangspunt. De uitdaging was om veel herkenbare elementen terug te brengen tot een rustige en minimalistische compositie. Het eindresultaat legt de focus op sfeer, kleur en vorm, waardoor de stad direct herkenbaar blijft." },
   { img:A+"ill_tlv.jpg",        t:"Tel Aviv aan Zee", role:"Illustratie | 2025", desc:"Voor deze illustratie stond de kustlijn van Tel Aviv centraal. De uitdaging was om het contrast tussen de historische architectuur van Jaffa en de moderne skyline van Tel Aviv in één beeld samen te brengen. Door warme kleuren en een ontspannen sfeer te gebruiken ontstond een illustratie die het karakter van de stad goed weerspiegelt." },
@@ -605,6 +646,32 @@ function openAbout(){
   markRunning();
 }
 
+function openVisie(){
+  createWindow({ key:"visie", title:"Mijn visie op design - Notities", w:Math.min(620,mac.clientWidth*.72), x:mac.clientWidth*.2, y:60,
+    html:`<div class="rich">
+      <h3 style="margin-bottom:2px">Mijn visie op design</h3>
+      <p style="color:#7a86a0;font-size:.8rem;margin-top:0;text-transform:uppercase;letter-spacing:.05em">Visie op het vakgebied</p>
+      <p>Voor mij begint goed interface-design bij de gebruiker. Een ontwerp moet intuïtief aanvoelen: je hoeft niet na te denken over hóe iets werkt, het werkt gewoon. De grootste uitdaging, en het mooiste deel van mijn vak, is om complexe informatie eenvoudig te maken. Iets ingewikkelds terugbrengen tot iets dat meteen klopt, daar doe ik het voor.</p>
+      <p>Mijn werk wordt gestuurd door vier waarden: toegankelijkheid, duidelijkheid, creativiteit en betrokkenheid. Een ontwerp moet voor iedereen te begrijpen zijn, maar het hoeft daarom niet saai te zijn. Mooi en functioneel sluiten elkaar niet uit. De beste ontwerpen zijn allebei tegelijk.</p>
+      <p>Ik geloof dat visueel design meer kan dan informatie overbrengen. Het beïnvloedt gedrag en keuzes, maakt verhalen tastbaar en kan emoties oproepen die mensen aanzetten tot nadenken of actie. Juist daarom kan design ook maatschappelijk iets betekenen: het creëert bewustwording rond onderwerpen die ertoe doen. In mijn werk over antisemitisme in Nederland heb ik gezien hoe losse feiten, samengebracht in één visuele ervaring, ineens binnenkomen op een manier die tekst alleen niet voor elkaar krijgt.</p>
+      <p>Als designer wil ik ontwerpen maken die iets losmaken. Werk dat complexe problemen begrijpelijk maakt, functionaliteit combineert met een sterke visuele ervaring, en zowel mooi als betekenisvol is. En ik wil blijven experimenteren met nieuwe technieken en technologieën, zodat mijn werk blijft verrassen.</p>
+    </div>` });
+  markRunning();
+}
+
+function openCredits(){
+  createWindow({ key:"credits", title:"Credits & bronnen - Info", w:Math.min(440,mac.clientWidth*.58), x:mac.clientWidth*.34, y:120,
+    html:`<div class="rich">
+      <h3 style="margin-bottom:2px">Credits &amp; bronnen</h3>
+      <p style="color:#7a86a0;font-size:.8rem;margin-top:0">Eerlijk over hoe deze site tot stand kwam.</p>
+      <p><strong>Ontwerp &amp; concept:</strong> Daniël Prins. Het concept (een interactieve macOS-desktop), de inhoud, alle projecten, illustraties en teksten zijn van mijn hand.</p>
+      <p><strong>Eigen werk:</strong> alle getoonde projecten, posters en illustraties heb ik zelf ontworpen. Het lettertype in het Bungehuis-project is een eigen ontwerp.</p>
+      <p><strong>AI als hulpmiddel:</strong> de code van deze site is ontwikkeld met behulp van AI. Ik heb AI gebruikt als hulpmiddel bij het bouwen; de creatieve richting, inhoud en keuzes zijn van mij.</p>
+      <p><strong>Techniek:</strong> HTML, CSS en JavaScript, met GSAP voor de animaties en het lettertype Inter (Google Fonts).</p>
+    </div>` });
+  markRunning();
+}
+
 function openSkills(){
   const groups = Object.entries(SKILLS).map(([title,items])=>`
     <div class="group"><h4>${title}</h4>
@@ -629,10 +696,22 @@ function openContact(){
   markRunning();
 }
 
-const APPS = { projects:openProjects, gallery:openGallery, about:openAbout, skills:openSkills, contact:openContact };
+const APPS = { projects:openProjects, gallery:openGallery, about:openAbout, visie:openVisie, skills:openSkills, credits:openCredits, contact:openContact };
 
 document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",(e)=>{ e.preventDefault(); APPS[b.dataset.open]?.(); bounce(b); }));
 document.querySelectorAll(".dicon[data-project]").forEach(ic=>ic.addEventListener("click",()=>{ openProjects(); openPreview(PROJECTS.findIndex(p=>p.id===ic.dataset.project)); }));
+
+/* profiel-widget: in-/uitklappen via sluitknop en bubble */
+const widgetClose = document.getElementById("widgetClose");
+const profileBubble = document.getElementById("profileBubble");
+if(widgetClose) widgetClose.addEventListener("click", ()=>{
+  document.body.classList.add("widget-collapsed");
+  if(!prefersReduced) gsap.from(profileBubble, { scale:0, opacity:0, duration:.4, ease:"back.out(1.8)" });
+});
+if(profileBubble) profileBubble.addEventListener("click", ()=>{
+  document.body.classList.remove("widget-collapsed");
+  if(!prefersReduced) gsap.from("#widget", { scale:.9, opacity:0, y:-10, duration:.4, ease:"back.out(1.5)" });
+});
 
 /* ─────────────────────────────────────────────────────────────
    4. DOCK - magnification + bounce
