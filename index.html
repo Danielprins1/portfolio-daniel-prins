@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#9ccaaf" />
 <title>DJP Design - Daniël Prins</title>
 <meta name="description" content="Portfolio van Daniël Prins - Communication & Multimedia Design student. Een interactieve macOS-desktop." />
 <link rel="icon" type="image/png" href="assets/favicon.png" />
@@ -28,11 +29,18 @@
 }
 *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
 html,body{ height:100%; }
+html{ background:#9ccaaf; }
 body{
   font-family:var(--font); color:var(--ink);
-  background:var(--wall-1) url("assets/wallpaper.jpg") center/cover no-repeat fixed;
+  background:#9ccaaf;
   overflow:hidden; -webkit-font-smoothing:antialiased;
   user-select:none;
+}
+/* vaste achtergrondlaag: vult ALTIJD het hele scherm, ook achter browser-UI.
+   Betrouwbaarder dan background-attachment:fixed op mobiele browsers. */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background:#9ccaaf url("assets/wallpaper.jpg") center/cover no-repeat;
 }
 img{ display:block; max-width:100%; }
 button{ font:inherit; border:0; background:none; cursor:pointer; color:inherit; }
